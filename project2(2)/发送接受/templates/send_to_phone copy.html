@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>PC to Phone Communication</title>
+</head>
+<body>
+    <h1>Send Message to Phone</h1>
+    <form id="messageForm">
+        <input type="text" id="messageInput" placeholder="Enter your message" required>
+        <button type="submit">Send</button>
+    </form>
+
+    <script>
+        document.getElementById('messageForm').addEventListener('submit', function(event) {
+            event.preventDefault();  // 阻止表单默认提交行为
+            var message = document.getElementById('messageInput').value;
+            fetch('/send_to_phone', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({message: message})
+            })
+            .then(response => response.json())
+            .then(data => {
+                // 可以在此处显示发送成功的消息
+                console.log('Message sent:', data);
+            })
+            .catch(error => {
+                // 错误处理
+                console.error('Error:', error);
+            });
+        });
+    </script>
+</body>
+</html>

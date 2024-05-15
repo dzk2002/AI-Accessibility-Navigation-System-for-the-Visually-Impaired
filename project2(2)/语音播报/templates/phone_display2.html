@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Receive Message on Phone</title>
+</head>
+<body>
+<h1>Received Messages</h1>
+<div id="messages"></div>
+
+<script>
+        function fetchMessages() {
+            fetch('http://localhost:5000/receive_messages')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error("Network response was not ok");
+                }
+                return response.json();
+            })
+            .then(data => {
+                // 展示消息前先清空旧消息
+                var messagesDiv = document.getElementById('messages');
+                messagesDiv.innerHTML = '';
+
+                // 假设最新的消息在数组的最后一个元素
+                const latestMessage = data.messages[data.messages.length - 1];
+                if(latestMessage) { // 检查是否存在最新消息
+                    var messageContainer = document.createElement("div");
+                    var para = document.createElement("p");
+                    var playButton = document.createElement("button");
+                    playButton.textContent = 'Play';
+                    para.textContent = latestMessage;
+                    playButton.onclick = function() { speakMessage(latestMessage); };
+
+                    // 把段落和播放按钮添加到消息容器，然后把容器添加到页面上
+                    messageContainer.appendChild(para);
+                    messageContainer.appendChild(playButton);
+                    messagesDiv.appendChild(messageContainer);
+                }
+
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        }
+
+        // 用于朗读消息的函数
+        function speakMessage(message) {
+            var msg = new SpeechSynthesisUtterance();
+            msg.text = message;
+            window.speechSynthesis.speak(msg);
+        }
+
+        setInterval(fetchMessages, 1000); // 每隔1秒钟获取一次消息
+
+    </script>
+</body>
+</html>

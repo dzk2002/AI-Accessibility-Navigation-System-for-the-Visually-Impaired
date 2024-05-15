@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Receive Message on Phone</title>
+</head>
+<body>
+<h1>Received Messages</h1>
+<div id="messages"></div>
+
+<script>
+        let lastMessageText = ""; // 用于存储最后一条消息的文本以检测新消息
+
+        function fetchMessages() {
+            fetch('http://192.168.43.238:5000/receive_messages')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error("Network response was not ok");
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    // 假设最新的消息在数组的最后一个元素
+                    const latestMessage = data.messages[data.messages.length - 1];
+                    if (latestMessage && latestMessage !== lastMessageText) { // 如果有新消息到来
+                        updateMessageDisplay(latestMessage); // 更新显示区域
+                        speakMessage(latestMessage); // 自动播放新消息
+                        lastMessageText = latestMessage; // 更新已播放消息记录
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+        }
+
+        function updateMessageDisplay(message) {
+            var messagesDiv = document.getElementById('messages');
+            messagesDiv.innerHTML = ''; // 清空上一条消息
+
+            var messageContainer = document.createElement("div");
+            var para = document.createElement("p");
+            var playButton = document.createElement("button");
+            playButton.textContent = 'Play';
+            para.textContent = message;
+            playButton.onclick = function() { playMessage(message); }; // 播放按钮点击事件
+
+            // 将段落和播放按钮添加到消息容器中
+            messageContainer.appendChild(para);
+            messageContainer.appendChild(playButton);
+            messagesDiv.appendChild(messageContainer);
+        }
+
+        function playMessage(message) {
+            var msg = new SpeechSynthesisUtterance();
+            msg.text = message;
+            window.speechSynthesis.speak(msg);
+        }
+
+        // 用于朗读消息的函数
+        function speakMessage(message) {
+            if (message !== lastMessageText) { // 仅当消息为新时才朗读，避免重复
+                var msg = new SpeechSynthesisUtterance();
+                msg.text = message;
+                window.speechSynthesis.speak(msg);
+            }
+        }
+
+        setInterval(fetchMessages, 1000); // 每隔1秒钟获取一次消息
+
+    </script>
+</body>
+</html>

@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>PC to Phone Communication</title>
+</head>
+<body>
+    <h1>Send Message to Phone</h1>
+
+    <script>
+        function sendMessage(message) {
+            fetch('/send_to_phone', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({message: message})
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Message sent:', data);
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        }
+
+        // 定义一个消息数组
+        var messages = [
+            "Message 1",
+            "Message 2",
+            "Message 3",
+            "Message 4",
+            "Message 5",
+            "Message 6"
+        ];
+
+        // 消息索引
+        var index = 0;
+
+        // 设置定时器，每5秒发送一个消息
+        setInterval(function() {
+            if (index < messages.length) {
+                sendMessage(messages[index]);
+                index++; // 移动到下一个消息
+            } else {
+                // 如果已经发送了所有消息，可以选择停止定时器或者重新开始
+                index = 0; // 重置索引以重新开始发送消息
+                // clearInterval(intervalId); // 停止定时器
+            }
+        }, 5000); // 5000毫秒 = 5秒
+    </script>
+</body>
+</html>

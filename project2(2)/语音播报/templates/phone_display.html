@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Receive Message on Phone</title>
+</head>
+<body>
+    <h1>Received Messages</h1>
+    <div id="messages"></div>
+
+    <script>
+        function fetchMessages() {
+            // 发起 GET 请求获取消息
+            // 实际使用时应该把localhost切换为实际的电脑IP地址
+            fetch('http://localhost:5000/receive_messages')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error("Network response was not ok");
+                }
+                return response.json(); // 这里使用 return 是关键
+            })
+            .then(data => {
+                // 显示消息
+                var messagesDiv = document.getElementById('messages');
+                messagesDiv.innerHTML = '';  // 清空旧消息
+                data.messages.forEach(message => {
+                    var para = document.createElement("p");
+                    para.textContent = message;
+                    messagesDiv.appendChild(para);
+                });
+            })
+            .catch(error => {
+                // 错误处理
+                console.error('Error:', error);
+            });
+        }
+
+        setInterval(fetchMessages, 1000);  // 每隔1秒钟获取一次消息
+
+    </script>
+</body>
+</html>

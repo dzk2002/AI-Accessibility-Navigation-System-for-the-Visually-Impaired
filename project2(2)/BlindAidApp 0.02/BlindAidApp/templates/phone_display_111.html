@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blind Aid App</title>
+</head>
+<body>
+    <h1>Blind Aid Information Display</h1>
+    <div id="info"></div>
+    <button id="toggleSpeech">Toggle Speech</button>
+
+    <script>
+        let isSpeaking = false; // 用于判断是否正在朗读
+        let speechEnabled = true; // 用于控制朗读开关
+        let lastMessageText = ""; // 用于存储最后一条朗读过的消息文本
+
+        // 切换朗读的开关
+        document.getElementById('toggleSpeech').onclick = function () {
+            speechEnabled = !speechEnabled;
+            this.textContent = speechEnabled ? "Disable Speech" : "Enable Speech";
+        };
+
+        // 朗读消息的函数
+        function speakMessage(message) {
+            if (!isSpeaking && message !== lastMessageText && speechEnabled) {
+                isSpeaking = true;
+                var msg = new SpeechSynthesisUtterance(message);
+                // 设置朗读结束后的操作
+                msg.onend = function() {
+                    isSpeaking = false;
+                    fetch('http://localhost:5000/acknowledge_speech_end', {
+                        method: 'POST'
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        console.log('Recognition re-enabled: ', data.status);
+                        fetchInfo();
+                    })
+                    .catch(error => console.error('Error:', error));
+                };
+
+                window.speechSynthesis.speak(msg);
+                lastMessageText = message; // 更新已朗读消息
+                updateMessageDisplay(message); // 更新显示的信息
+            }
+        }
+
+        // 更新显示区域
+        function updateMessageDisplay(message) {
+            document.getElementById('info').innerText = message;
+        }
+
+        // 获取当前信息
+        async function fetchInfo() {
+            if (!isSpeaking) {  // 仅在没有正在朗读时尝试获取信息
+                try {
+                    const response = await fetch('http://192.168.1.111:5000/current_info'); // 请确保 Flask 中有对应的 '/current_info' 路由
+                    if (!response.ok) {
+                        throw new Error("Network response was not ok");
+                    }
+                    const data = await response.json();
+                    const currentMessage = data.message;
+
+                    speakMessage(currentMessage); // 尝试朗读新信息
+                } catch (error) {
+                    console.error('Error:', error);
+                }
+            }
+        }
+
+        setInterval(fetchInfo, 1000); // 每秒检查一次信息
+    </script>
+
+    <div id="log"></div>
+
+    <script>
+        function updateLog(message) {
+            const logDiv = document.getElementById('log');
+            const p = document.createElement('p');
+            p.innerText = message;
+            logDiv.appendChild(p);
+            if (logDiv.children.length > 100) {  // 限制日志条数，避免过度膨胀
+                logDiv.removeChild(logDiv.children[0]);
+            }
+        }
+    </script>
+
+</body>
+</html>
